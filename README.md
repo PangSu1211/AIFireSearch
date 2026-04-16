@@ -4,7 +4,7 @@
 
 ## docs
 
-- requirements (Google Sheet)  : https://docs.google.com/spreadsheets/d/1uYpF3duvYlRQkQQaSm8fvD1F9VOX2kp7LKn74pYy3gY/edit?gid=0#gid=0
+- requirements (Google Sheet) , 관련 서비스 및 기술  : https://docs.google.com/spreadsheets/d/1uYpF3duvYlRQkQQaSm8fvD1F9VOX2kp7LKn74pYy3gY/edit?gid=0#gid=0
 - requirements.pdf  : 요구사항 정의서
 - erd.pdf  : ERD 설계
 - usecase.pdf  : 유스케이스 다이어그램
