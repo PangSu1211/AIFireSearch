@@ -4,6 +4,7 @@
 
 ## docs
 
+- 피그마 주소 : https://www.figma.com/design/hlDMKicaKes1jks8DGJKcS/Capston2?node-id=0-1&t=9m4UtF0M3w49Ypgf-0
 - requirements (Google Sheet) , 관련 서비스 및 기술  : https://docs.google.com/spreadsheets/d/1uYpF3duvYlRQkQQaSm8fvD1F9VOX2kp7LKn74pYy3gY/edit?gid=0#gid=0
 - requirements.pdf  : 요구사항 정의서
 - erd.pdf  : ERD 설계
