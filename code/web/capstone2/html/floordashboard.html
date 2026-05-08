@@ -8,15 +8,17 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
   </head>
   <body>
+
+    <!-- 사이드바 -->
     <aside class="sidebar">
       <div class="sidebar-date">
-        <div class="date-main" id="current-date"></div>
-        <div class="date-time" id="current-time"></div>
+        <div class="date-main" id="sidebar-date"></div>
+        <div class="date-time" id="sidebar-time"></div>
       </div>
 
       <nav class="sidebar-nav">
@@ -53,69 +55,84 @@
 
         <div class="nav-total">
           <span class="total-label">총원</span>
-          <span class="total-badge" id="floor-total-badge">20명</span>
+          <span class="total-badge" id="floor-total-badge">0명</span>
         </div>
       </nav>
     </aside>
 
+    <!-- 메인 컨텐츠 -->
     <main class="main-content">
-      <header class="topbar">
-        <div class="topbar-left">
-          <h1 class="page-title">층별 현황</h1>
-          <span class="status-chip danger" id="floorStatusChip">주의 필요 2</span>
+
+      <!-- 헤더 -->
+      <header class="main-header">
+        <div class="header-left">
+          <h1 class="header-title">층별 현황</h1>
+          <span class="status-chip" id="floorStatusChip">정상</span>
         </div>
 
-        <div class="topbar-right">
+        <div class="header-right">
           <div class="legend">
             <span class="legend-item"><span class="legend-dot red"></span>위험</span>
             <span class="legend-item"><span class="legend-dot yellow"></span>주의</span>
             <span class="legend-item"><span class="legend-dot green"></span>정상</span>
           </div>
-          <button class="icon-btn" title="알림">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            </svg>
-          </button>
         </div>
       </header>
 
+      <!-- 툴바 -->
       <section class="floor-toolbar">
         <div class="floor-tabs" id="floorTabs"></div>
         <div class="floor-summary">
           <div class="summary-card">
             <span class="summary-label">현재 층</span>
-            <strong id="summary-floor">1층</strong>
+            <strong id="summary-floor">—</strong>
           </div>
           <div class="summary-card">
             <span class="summary-label">총 인원</span>
-            <strong id="summary-people">20명</strong>
+            <strong id="summary-people">—</strong>
           </div>
           <div class="summary-card">
             <span class="summary-label">카메라 수</span>
-            <strong id="summary-cameras">10대</strong>
+            <strong id="summary-cameras">—</strong>
           </div>
           <div class="summary-card">
             <span class="summary-label">주의/위험</span>
-            <strong id="summary-alerts">4대</strong>
+            <strong id="summary-alerts">—</strong>
           </div>
           <div class="summary-card danger">
             <span class="summary-label">주의 필요 인원</span>
-            <strong id="summary-alert-people">9명</strong>
+            <strong id="summary-alert-people">—</strong>
           </div>
         </div>
       </section>
 
+      <!-- 도면 카드 -->
       <section class="floor-layout-card">
+
+        <!-- 헤더 행 -->
         <div class="layout-header">
-          <div>
-            <h2 id="layout-title">1층 도면</h2>
-            <p id="layout-subtitle">카메라 위치와 상태를 한눈에 확인할 수 있는 층별 현황 화면 틀</p>
+          <div class="layout-header-left">
+            <h2 id="layout-title">도면</h2>
+            <p id="layout-subtitle">카메라를 클릭하면 상세 정보를 확인할 수 있습니다</p>
           </div>
-          <button class="outline-btn">도면 교체</button>
+          <div class="layout-header-right">
+            <!-- 선택 카메라 인라인 박스 -->
+            <div class="selected-inline" id="selectedInlineBox">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.5;flex-shrink:0">
+                <path d="M23 7l-7 5 7 5V7z"></path>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+              </svg>
+              <span class="selected-inline-id" id="selectedInlineId">—</span>
+              <span class="selected-inline-meta" id="selectedInlineMeta">카메라를 선택하세요</span>
+              <span class="selected-inline-status" id="selectedInlineStatus">—</span>
+            </div>
+          </div>
         </div>
 
+        <!-- 본문 -->
         <div class="layout-body">
+
+          <!-- 도면 -->
           <div class="floor-stage">
             <div class="floor-canvas" id="floorCanvas">
               <div class="floor-grid"></div>
@@ -134,28 +151,45 @@
             </div>
           </div>
 
+          <!-- 사이드 패널 -->
           <aside class="side-panel">
+
+            <!-- 이 층 카메라 목록 -->
+            <div class="panel-card" style="flex:1;min-height:0;display:flex;flex-direction:column;">
+              <h3>카메라 목록</h3>
+              <div class="camera-list" id="cameraList"></div>
+            </div>
+
+            <!-- 선택 카메라 상세 -->
             <div class="panel-card">
-              <h3>선택 카메라</h3>
-              <div class="selected-camera" id="selectedCameraCard">
-                <div class="selected-id" id="selectedId">1F-01</div>
-                <div class="selected-meta" id="selectedMeta">1층 입구 · 인원 1명 · 신뢰도 93%</div>
-                <div class="selected-status green" id="selectedStatus">정상</div>
+              <h3>상세 정보</h3>
+              <div class="detail-rows" id="detailRows">
+                <div class="detail-row">
+                  <span class="detail-row-label">카메라 ID</span>
+                  <span class="detail-row-value" id="detail-id">—</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-row-label">위치</span>
+                  <span class="detail-row-value" id="detail-place">—</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-row-label">감지 인원</span>
+                  <span class="detail-row-value" id="detail-people">—</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-row-label">신뢰도</span>
+                  <span class="detail-row-value" id="detail-trust">—</span>
+                </div>
+                <div id="detail-status-wrap" style="margin-top:4px;">
+                  <span class="detail-status-badge" id="detail-status">—</span>
+                </div>
               </div>
             </div>
 
-            <div class="panel-card">
-              <h3>이 화면에서 클로드에게 넘길 포인트</h3>
-              <ul class="todo-list">
-                <li>실제 도면 이미지로 교체</li>
-                <li>카메라 위치 좌표만 데이터로 관리</li>
-                <li>카메라 클릭 시 상세 팝업 / 상세 페이지 연결</li>
-                <li>위험 카메라는 상단 배너 또는 실시간 알림 연결</li>
-              </ul>
-            </div>
           </aside>
         </div>
       </section>
+
     </main>
 
     <script src="../js/floordashboard.js"></script>
