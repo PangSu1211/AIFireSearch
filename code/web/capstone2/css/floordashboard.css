@@ -415,3 +415,15 @@ body {
     max-width: 560px;
   }
 }
+
+
+/* ===== TRUST-BASED STATUS CHIP ===== */
+.status-chip.safe {
+  color: #1f9b33;
+  background: var(--green-soft);
+}
+
+.status-chip.warning {
+  color: #aa8a00;
+  background: var(--yellow-soft);
+}
