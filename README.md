@@ -12,3 +12,7 @@
 - usecasd_spec.pdf  : 유스케이스 명세서
 - system_design.pdf  : 시스템 설계도
 - system_flow.png  : 시스템 흐름도
+
+## code
+### web
+기능 없이 대충 틀만 잡고 있는 중
