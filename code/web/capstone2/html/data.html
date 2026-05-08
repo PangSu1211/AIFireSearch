@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>데이터 대시보드</title>
+    <link rel="stylesheet" href="../css/data.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <!-- 사이드바 -->
+    <aside class="sidebar">
+      <div class="sidebar-date">
+        <div class="date-main" id="current-date"></div>
+        <div class="date-time" id="current-time"></div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <!-- 건물 현황 -->
+        <a href="maindashboard.html" class="nav-item">
+          <span class="nav-icon">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M9 9h6M9 12h6M9 15h6" />
+            </svg>
+          </span>
+
+          건물 현황
+        </a>
+
+        <!-- 층별 현황 -->
+        <a href="floordashboard.html" class="nav-item">
+          <span class="nav-icon">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+          </span>
+
+          층별 현황
+        </a>
+
+        <!-- 데이터 -->
+        <a href="data.html" class="nav-item active">
+          <span class="nav-icon">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+          </span>
+
+          데이터
+        </a>
+
+        <div class="nav-divider"></div>
+      </nav>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+      <!-- TOP BAR -->
+      <header class="topbar">
+        <h1 class="page-title">데이터</h1>
+        <button class="bell-btn" id="bellBtn" title="알림">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+          <span class="badge">5</span>
+        </button>
+      </header>
+
+      <!-- CONTENT GRID -->
+      <div class="content-grid">
+        <!-- LEFT COLUMN -->
+        <div class="left-col">
+          <!-- 시간별 인원분포도 -->
+          <section class="card chart-card" id="hourlyCard">
+            <div class="card-header">
+              <h2>시간별 인원분포도</h2>
+              <button class="gear-btn" id="gearBtn" title="설정">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path
+                    d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div class="legend">
+              <span class="leg-item"
+                ><span class="dot" style="background: #888"></span>10명
+                이하</span
+              >
+              <span class="leg-item"
+                ><span class="dot" style="background: #4caf50"></span
+                >10~20명</span
+              >
+              <span class="leg-item"
+                ><span class="dot" style="background: #ffc107"></span
+                >20~30명</span
+              >
+              <span class="leg-item"
+                ><span class="dot" style="background: #ff9800"></span
+                >30~40명</span
+              >
+              <span class="leg-item"
+                ><span class="dot" style="background: #f44336"></span>40명
+                이상</span
+              >
+            </div>
+            <div class="chart-wrap" id="hourlyChartWrap">
+              <canvas id="hourlyChart"></canvas>
+            </div>
+          </section>
+
+          <!-- 층별 인원분포도 -->
+          <section class="card chart-card" id="floorCard">
+            <div class="card-header">
+              <h2>층별 인원분포도</h2>
+            </div>
+            <div class="chart-wrap" id="floorChartWrap">
+              <canvas id="floorChart"></canvas>
+            </div>
+          </section>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="right-col">
+          <!-- 화재 의심 이력 -->
+          <section class="card fire-card">
+            <div class="card-header">
+              <h2>화재 의심 이력</h2>
+              <div class="search-box">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="11" cy="11" r="7" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input type="text" placeholder="화재 의심 이력 검색" />
+              </div>
+            </div>
+            <table class="fire-table">
+              <thead>
+                <tr>
+                  <th>화재 의심 일자</th>
+                  <th>카메라 신뢰도</th>
+                  <th>장소</th>
+                  <th>인원 수</th>
+                  <th>영상</th>
+                  <th>메모</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2023.4.6</td>
+                  <td>42</td>
+                  <td>2층 구내식당</td>
+                  <td>21</td>
+                  <td>
+                    <button
+                      class="video-btn"
+                      data-video="video1"
+                      title="영상 보기"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                    </button>
+                  </td>
+                  <td>
+                    <button class="memo-btn" title="메모">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path
+                          d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                        />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>2019.12.3</td>
+                  <td>21</td>
+                  <td>3층 304호</td>
+                  <td>2</td>
+                  <td>
+                    <button
+                      class="video-btn"
+                      data-video="video2"
+                      title="영상 보기"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                    </button>
+                  </td>
+                  <td>
+                    <button class="memo-btn" title="메모">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path
+                          d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                        />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <!-- 카메라 신뢰도 -->
+          <section class="card camera-card">
+            <div class="card-header">
+              <h2>카메라 신뢰도</h2>
+            </div>
+            <div class="camera-content">
+              <div class="camera-left">
+                <div class="check-badge" id="checkBadgeBtn">
+                  <span class="badge-label">점검필요</span>
+                  <svg
+                    class="chevron"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </div>
+                <div class="check-list" id="checkList">
+                  <div
+                    class="check-item"
+                    data-cam="4층 403호"
+                    data-camid="cam1"
+                  >
+                    <span class="dot red"></span>4층 403호
+                  </div>
+                  <div
+                    class="check-item"
+                    data-cam="1층 로비 3번"
+                    data-camid="cam2"
+                  >
+                    <span class="dot red"></span>1층 로비 3번
+                  </div>
+                  <div
+                    class="check-item"
+                    data-cam="6층 테라스"
+                    data-camid="cam3"
+                  >
+                    <span class="dot red"></span>6층 테라스
+                  </div>
+                </div>
+              </div>
+              <div class="donut-wrap">
+                <canvas id="donutChart"></canvas>
+                <div class="donut-warn">⚠️</div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <!-- ===== MODALS ===== -->
+
+    <!-- 그래프 확대 팝업 ⓐ -->
+    <div class="modal-overlay" id="chartModal">
+      <div class="modal large">
+        <div class="modal-header">
+          <h3 id="chartModalTitle">그래프 확대</h3>
+          <button class="close-btn" data-close="chartModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <canvas id="expandedChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- 카메라 점검 팝업 ⓑ -->
+    <div class="modal-overlay" id="cameraModal">
+      <div class="modal medium">
+        <div class="modal-header">
+          <h3 id="cameraModalTitle">카메라 점검</h3>
+          <button class="close-btn" data-close="cameraModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="cctv-screen">
+            <div class="cctv-placeholder">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path
+                  d="M15 10l4.553-2.069A1 1 0 0 1 21 8.82v6.361a1 1 0 0 1-1.447.894L15 14"
+                />
+                <rect x="1" y="6" width="14" height="12" rx="2" />
+              </svg>
+              <p id="cameraLabel">CCTV 영상</p>
+              <span class="live-badge">● LIVE</span>
+            </div>
+          </div>
+          <div class="cctv-info">
+            <p id="camInfoText">카메라: <strong>-</strong></p>
+            <p>
+              상태: <strong class="red-text">신뢰도 낮음 — 점검 필요</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 영상 팝업 ⓓ -->
+    <div class="modal-overlay" id="videoModal">
+      <div class="modal medium">
+        <div class="modal-header">
+          <h3 id="videoModalTitle">화재 의심 영상</h3>
+          <button class="close-btn" data-close="videoModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="cctv-screen fire-screen">
+            <div class="cctv-placeholder">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path
+                  d="M15 10l4.553-2.069A1 1 0 0 1 21 8.82v6.361a1 1 0 0 1-1.447.894L15 14"
+                />
+                <rect x="1" y="6" width="14" height="12" rx="2" />
+              </svg>
+              <p id="videoLabel">화재 의심 당시 영상</p>
+              <span class="rec-badge">● REC</span>
+            </div>
+          </div>
+          <div class="video-info" id="videoInfo"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 알림 팝업 ⓒⓔ -->
+    <div class="modal-overlay" id="notifModal">
+      <div class="modal notif-modal">
+        <div class="modal-header">
+          <div class="notif-header-title">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            Notifications
+          </div>
+          <button class="close-btn" data-close="notifModal">✕</button>
+        </div>
+        <div class="modal-body notif-list">
+          <div class="notif-item warning" data-target="cameraSection">
+            <div class="notif-icon warning-icon">!</div>
+            <span>카메라 신뢰도 확인 필요</span>
+            <button
+              class="notif-confirm-btn"
+              data-action="navigate"
+              data-target="cameraSection"
+            >
+              확인
+            </button>
+            <button class="notif-x">✕</button>
+          </div>
+          <div class="notif-item success">
+            <div class="notif-icon success-icon">✓</div>
+            <span>화재 이력 CCTV 다운 완료</span>
+            <button class="notif-confirm-btn" data-action="close">확인</button>
+            <button class="notif-x">✕</button>
+          </div>
+          <div class="notif-item info">
+            <div class="notif-icon info-icon">i</div>
+            <span>V.1.0.2 업데이트 완료</span>
+            <button class="notif-confirm-btn" data-action="close">확인</button>
+            <button class="notif-x">✕</button>
+          </div>
+          <div class="notif-item warning">
+            <div class="notif-icon warning-icon">!</div>
+            <span>1층 로비 카메라 신뢰도 감소</span>
+            <button
+              class="notif-confirm-btn"
+              data-action="navigate"
+              data-target="cameraSection"
+            >
+              확인
+            </button>
+            <button class="notif-x">✕</button>
+          </div>
+          <div class="notif-item danger">
+            <div class="notif-icon danger-icon">✕</div>
+            <span>1층 3번 카메라 화재 확인 필요</span>
+            <button
+              class="notif-confirm-btn"
+              data-action="navigate"
+              data-target="fireSection"
+            >
+              확인
+            </button>
+            <button class="notif-x">✕</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 설정 팝업 ⓕ -->
+    <div class="modal-overlay" id="settingsModal">
+      <div class="modal settings-modal">
+        <div class="modal-header">
+          <h3>기간 설정</h3>
+          <button class="close-btn" data-close="settingsModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <!-- Date Range -->
+          <div class="date-range">
+            <div class="date-input-wrap">
+              <label>시작일</label>
+              <input
+                type="text"
+                id="startDateInput"
+                class="date-input"
+                value="2019.12"
+                readonly
+              />
+            </div>
+            <span class="to-label">to</span>
+            <div class="date-input-wrap">
+              <label>종료 일</label>
+              <input
+                type="text"
+                id="endDateInput"
+                class="date-input"
+                value="2023.11"
+                readonly
+              />
+            </div>
+          </div>
+
+          <!-- Calendars -->
+          <div class="calendars-row" id="calendarsRow" style="display: none">
+            <div class="cal-panel" id="startCal">
+              <div class="cal-nav">
+                <button id="startPrev">‹</button>
+                <span id="startMonthLabel"></span>
+                <button id="startNext">›</button>
+              </div>
+              <div class="cal-grid" id="startCalGrid"></div>
+            </div>
+            <div class="cal-panel" id="endCal">
+              <div class="cal-nav">
+                <button id="endPrev">‹</button>
+                <span id="endMonthLabel"></span>
+                <button id="endNext">›</button>
+              </div>
+              <div class="cal-grid" id="endCalGrid"></div>
+            </div>
+          </div>
+
+          <!-- Color Ranges -->
+          <div class="color-settings">
+            <div class="color-section-title">색상 별 인원 수 설정</div>
+            <div class="color-inputs">
+              <div class="color-input-item">
+                <span class="color-swatch" style="background: #888"></span>
+                <input
+                  type="number"
+                  class="range-input"
+                  data-index="0"
+                  value="10"
+                  min="1"
+                />
+              </div>
+              <div class="color-input-item">
+                <span class="color-swatch" style="background: #4caf50"></span>
+                <input
+                  type="number"
+                  class="range-input"
+                  data-index="1"
+                  value="20"
+                  min="1"
+                />
+              </div>
+              <div class="color-input-item">
+                <span class="color-swatch" style="background: #ffc107"></span>
+                <input
+                  type="number"
+                  class="range-input"
+                  data-index="2"
+                  value="30"
+                  min="1"
+                />
+              </div>
+              <div class="color-input-item">
+                <span class="color-swatch" style="background: #ff9800"></span>
+                <input
+                  type="number"
+                  class="range-input"
+                  data-index="3"
+                  value="40"
+                  min="1"
+                />
+              </div>
+              <div class="color-input-item">
+                <span class="color-swatch" style="background: #f44336"></span>
+                <input
+                  type="number"
+                  class="range-input"
+                  data-index="4"
+                  value="50"
+                  min="1"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-actions">
+            <button class="btn-cancel" data-close="settingsModal">취소</button>
+            <button class="btn-apply" id="applySettings">적용</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/data.js"></script>
+  </body>
+</html>
