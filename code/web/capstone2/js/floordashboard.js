@@ -460,6 +460,7 @@ function renderFloorPlan() {
       selectedCamera = fd.cameras.find(c => c.id === camId) ?? null;
       renderFloorPlan();
       updatePanels();
+      openCameraPreviewPopup(camId);
     });
   });
 }
@@ -490,7 +491,7 @@ function renderCameraList() {
       <span class="camera-list-dot ${status}"></span>
       <span class="camera-list-id">${cam.id}</span>
       <span class="camera-list-info">${cam.people}명 · ${cam.trust}%</span>`;
-    item.addEventListener("click", () => { selectedCamera=cam; renderFloorPlan(); updatePanels(); });
+    item.addEventListener("click", () => { selectedCamera=cam; renderFloorPlan(); updatePanels(); openCameraPreviewPopup(cam.id); });
     listEl.appendChild(item);
   });
 }
@@ -545,6 +546,242 @@ function updateSummary() {
   }
 }
 
+
+
+
+
+/* ===== CCTV PREVIEW POPUP ===== */
+function openCameraPreviewPopup(camId) {
+  const camera = findCameraById(camId) || selectedCamera;
+  if (!camera) return;
+
+  selectedCamera = camera;
+  updatePanels();
+
+  const overlay = document.getElementById("camera-preview-overlay");
+  const screen = document.getElementById("camera-preview-screen");
+  const subtitle = document.getElementById("camera-preview-subtitle");
+  const tag = document.getElementById("camera-preview-tag");
+  const alertBox = document.getElementById("camera-preview-alert");
+  const confidence = document.getElementById("camera-preview-confidence");
+  const place = document.getElementById("camera-preview-place");
+  const people = document.getElementById("camera-preview-people");
+  const trust = document.getElementById("camera-preview-trust");
+  const statusEl = document.getElementById("camera-preview-status");
+
+  const status = getStatus(camera.trust);
+  const label = statusText(status);
+
+  subtitle.textContent = `${camera.floor}층 · ${camera.place} · ${camera.id}`;
+  tag.textContent = `${camera.id} · ${camera.floor}층 CCTV`;
+  confidence.textContent = `${camera.trust}%`;
+  place.textContent = `${camera.floor}층 ${camera.place}`;
+  people.textContent = `${camera.people}명`;
+  trust.textContent = `${camera.trust}%`;
+  statusEl.textContent = label;
+  statusEl.className = `status-${status}`;
+
+  screen.className = `camera-preview-screen status-${status}`;
+  if (status === 'red') {
+    alertBox.classList.remove('hidden');
+  } else {
+    alertBox.classList.add('hidden');
+  }
+
+  overlay.classList.remove('hidden');
+}
+
+function openSelectedCameraPopup() {
+  if (!selectedCamera) return;
+  openCameraPreviewPopup(selectedCamera.id);
+}
+
+function closeCameraPreviewPopup() {
+  const overlay = document.getElementById("camera-preview-overlay");
+  if (!overlay) return;
+  overlay.classList.add('hidden');
+}
+
+/* ===== FLOOR NOTIFICATIONS ===== */
+let currentNotifCamId = null;
+
+function getAllAlertCameras() {
+  return Object.entries(FLOOR_DATA)
+    .flatMap(([floorNum, floorData]) =>
+      floorData.cameras.map(camera => ({
+        ...camera,
+        floor: Number(floorNum),
+        status: getStatus(camera.trust),
+      }))
+    )
+    .filter(camera => camera.status !== "green")
+    .sort((a, b) => {
+      const order = { red: 0, yellow: 1, green: 2 };
+      return order[a.status] - order[b.status] || a.trust - b.trust;
+    });
+}
+
+function buildFloorNotifications() {
+  const alerts = getAllAlertCameras();
+
+  const listEl = document.getElementById("notif-list-items");
+  const emptyEl = document.getElementById("notif-list-empty");
+  const bellDot = document.getElementById("bell-dot");
+
+  if (!listEl || !emptyEl || !bellDot) return;
+
+  listEl.innerHTML = "";
+
+  if (alerts.length === 0) {
+    emptyEl.classList.remove("hidden");
+    bellDot.classList.remove("active");
+    return;
+  }
+
+  emptyEl.classList.add("hidden");
+  bellDot.classList.add("active");
+
+  alerts.forEach(alert => {
+    const row = document.createElement("div");
+    row.className = "notif-item";
+
+    row.innerHTML = `
+      <span class="notif-dot ${alert.status}"></span>
+
+      <div class="notif-item-text">
+        <div class="notif-item-title">${alert.id} · ${alert.floor}층</div>
+        <div class="notif-item-sub">
+          ${alert.place} · 신뢰도 ${alert.trust}% · 인원 ${alert.people}명 · ${statusText(alert.status)}
+        </div>
+      </div>
+
+      <span class="notif-item-action">확인 →</span>
+    `;
+
+    row.addEventListener("click", () => {
+      closeFloorNotifList();
+      openFloorNotifPopup(alert.id);
+    });
+
+    listEl.appendChild(row);
+  });
+}
+
+function toggleFloorNotifList() {
+  const list = document.getElementById("notif-list");
+  if (!list) return;
+  list.classList.toggle("hidden");
+}
+
+function closeFloorNotifList() {
+  const list = document.getElementById("notif-list");
+  if (!list) return;
+  list.classList.add("hidden");
+}
+
+function findCameraById(camId) {
+  for (const [floorNum, floorData] of Object.entries(FLOOR_DATA)) {
+    const camera = floorData.cameras.find(item => item.id === camId);
+    if (camera) {
+      return {
+        ...camera,
+        floor: Number(floorNum),
+        status: getStatus(camera.trust),
+      };
+    }
+  }
+
+  return null;
+}
+
+function openFloorNotifPopup(camId) {
+  const camera = findCameraById(camId);
+  if (!camera) return;
+
+  currentNotifCamId = camId;
+
+  const overlay = document.getElementById("notif-overlay");
+  const body = document.getElementById("notif-popup-body");
+  if (!overlay || !body) return;
+
+  const previewHtml =
+    camera.status === "red"
+      ? `
+        <div class="popup-camera-preview">
+          <div class="popup-camera-tag">${camera.id} · ${camera.floor}층 CCTV</div>
+
+          <span class="popup-camera-icon">
+            <svg
+              width="44"
+              height="44"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path d="M23 7l-7 5 7 5V7z"></path>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+            </svg>
+          </span>
+
+          <div class="popup-camera-confidence">${camera.trust}%</div>
+        </div>
+      `
+      : "";
+
+  const message =
+    camera.status === "red"
+      ? `카메라 신뢰도가 <b style="color:#ff4d4d">${camera.trust}%</b>로 매우 낮습니다. 즉시 점검이 필요합니다.`
+      : `카메라 신뢰도가 <b style="color:#f5c518">${camera.trust}%</b>로 주의 수준입니다. 확인이 필요합니다.`;
+
+  body.innerHTML = `
+    ${previewHtml}
+
+    <div class="popup-detail">
+      <strong>${camera.id} — ${camera.floor}층 ${camera.place}</strong>
+      ${message}
+
+      <div class="popup-status ${camera.status}">
+        ${statusText(camera.status)} · 인원 ${camera.people}명
+      </div>
+    </div>
+  `;
+
+  overlay.classList.remove("hidden");
+}
+
+function closeFloorNotifPopup() {
+  const overlay = document.getElementById("notif-overlay");
+  if (!overlay) return;
+
+  overlay.classList.add("hidden");
+  currentNotifCamId = null;
+}
+
+function goToFloorCamera() {
+  const camera = findCameraById(currentNotifCamId);
+  if (!camera) return;
+
+  currentFloor = camera.floor;
+  initialCameraId = camera.id;
+  selectedCamera = null;
+
+  closeFloorNotifPopup();
+  renderAll();
+}
+
+document.addEventListener("click", event => {
+  const bell = document.getElementById("notif-bell");
+  const list = document.getElementById("notif-list");
+
+  if (!bell || !list) return;
+
+  if (!bell.contains(event.target) && !list.contains(event.target)) {
+    closeFloorNotifList();
+  }
+});
+
+
 /* ===== CLOCK ===== */
 function updateClock() {
   const now = new Date();
@@ -573,6 +810,7 @@ function renderAll() {
     floor.cameras[0] || null;
   renderFloorPlan();
   updatePanels();
+  buildFloorNotifications();
 }
 
 /* ===== REFRESH ===== */
@@ -588,4 +826,17 @@ window.addEventListener("DOMContentLoaded", () => {
   buildFloorData();
   applyUrlParams();
   renderAll();
+});
+
+document.addEventListener("click", event => {
+  const overlay = document.getElementById("camera-preview-overlay");
+  if (!overlay || overlay.classList.contains("hidden")) return;
+  if (event.target === overlay) closeCameraPreviewPopup();
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") {
+    closeCameraPreviewPopup();
+    closeFloorNotifPopup();
+  }
 });
