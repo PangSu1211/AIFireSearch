@@ -2,37 +2,43 @@ from ultralytics import YOLO
 import cv2
 import os
 
-# 1. 모델 로드 (제시한 절대 경로 사용)
-# 경로 앞에 r을 붙여서 역슬래시 인식을 정확하게 함
-model_path = r'C:\Users\Mr.Hyeon\Desktop\YOLO학습 결과 파일\best_v11.pt'
+# 1. 모델 로드 (상대 경로 권장: 코드 파일과 같은 폴더에 best_v11.pt를 두는 것을 추천)
+# 현재는 네 환경에 맞게 절대 경로를 남겨두되, 젯슨으로 옮길 땐 반드시 'best_v11.pt'로 수정할 것.
+model_path = r'C:\Users\Mr.Hyeon\Desktop\AIFireSearch-main\code\YOLO학습 결과 파일\best_v11.pt'
 model = YOLO(model_path) 
 
-# 2. 영상 파일 로드
-video_path = r'C:\Users\Mr.Hyeon\Desktop\YOLO학습 결과 파일\TestVideo.mp4'
-cap = cv2.VideoCapture(video_path)
+# 2. 웹캠 캡처 객체 생성 (0번은 기본 내장/USB 웹캠)
+cap = cv2.VideoCapture(0)
 
-# 영상이 정상적으로 열렸는지 확인
+# 웹캠이 정상적으로 열렸는지 확인
 if not cap.isOpened():
-    print("오류: 영상을 불러올 수 없습니다. 경로를 다시 확인하세요.")
+    print("🚨 오류: 웹캠을 불러올 수 없습니다. 카메라 연결 상태를 확인하세요.")
     exit()
+
+print("✅ 실시간 카메라 화재 감지 테스트를 시작합니다. (종료: 'q' 키)")
 
 while cap.isOpened():
     success, frame = cap.read()
     if not success:
+        print("🚨 프레임을 읽어올 수 없습니다.")
         break
 
-    # 모델 추론 (conf 설정은 상황에 맞게 조절)
-    results = model.predict(frame, conf=0.4) 
+    # 3. 모델 추론 
+    # stream=True 옵션을 주면 제너레이터를 사용하여 실시간 메모리 관리에 훨씬 효율적임
+    results = model.predict(frame, conf=0.55, stream=True) 
 
-    # 검출 결과 시각화
-    annotated_frame = results[0].plot()
+    # 4. 검출 결과 시각화
+    for r in results:
+        annotated_frame = r.plot()
+        
+        # 화면 출력 창 이름 설정
+        cv2.imshow("Capstone Fire Detection Live Test", annotated_frame)
 
-    # 화면 출력 창 이름 설정
-    cv2.imshow("Capstone Fire Detection Test", annotated_frame)
-
-    # 'q' 키를 누르면 종료
+    # 5. 'q' 키를 누르면 종료
     if cv2.waitKey(1) & 0xFF == ord("q"):
+        print("🛑 실시간 테스트를 종료합니다.")
         break
 
+# 자원 해제
 cap.release()
 cv2.destroyAllWindows()
