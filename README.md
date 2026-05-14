@@ -20,7 +20,7 @@
 - 하드웨어 구성도.png
 - 관련 법령.txt
 
-###hw, sw 구성도 
+### hw, sw 구성도 
 -HW_SW_.png
 -SW,HW 구성도.drawio
 -다이어그램 이미지.zip
