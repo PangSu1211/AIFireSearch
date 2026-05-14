@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>관리자 설정 — Smart Fire Guard</title>
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- 사이드바 -->
+  <aside class="sidebar">
+    <div class="sidebar-date">
+      <div class="date-main" id="sidebar-date"></div>
+      <div class="date-time" id="sidebar-time"></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="maindashboard.html" class="nav-item">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h6"/>
+          </svg>
+        </span>건물 현황
+      </a>
+      <a href="floordashboard.html" class="nav-item">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+        </span>층별 현황
+      </a>
+      <a href="data.html" class="nav-item">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </span>데이터
+      </a>
+      <div class="nav-divider"></div>
+      <a href="admin.html" class="nav-item active">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+        </span>관리자 설정
+      </a>
+    </nav>
+  </aside>
+
+  <!-- 메인 -->
+  <main class="main-content">
+    <header class="main-header">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="header-title">관리자 설정</span>
+        <span class="header-sub">Smart Fire Guard 시스템 구성</span>
+      </div>
+    </header>
+
+    <div class="admin-body">
+
+      <!-- 요약 카드 -->
+      <div class="summary-strip" id="summaryStrip">
+        <div class="summary-item"><span class="s-label">건물명</span><span class="s-value" id="s-building" style="font-size:14px;font-family:var(--font-main)">—</span></div>
+        <div class="summary-item"><span class="s-label">전체 층 수</span><span class="s-value" id="s-floors">0</span></div>
+        <div class="summary-item"><span class="s-label">등록 카메라</span><span class="s-value" id="s-cameras">0</span></div>
+        <div class="summary-item"><span class="s-label">등록 구역</span><span class="s-value" id="s-zones">0</span></div>
+        <div class="summary-item"><span class="s-label">등록 센서</span><span class="s-value" id="s-sensors">0</span></div>
+        <div class="summary-item"><span class="s-label">현재 알림</span><span class="s-value" id="s-alerts" style="color:var(--status-red)">0</span></div>
+      </div>
+
+      <!-- 1. 건물 기본 설정 -->
+      <div class="admin-card">
+        <div class="card-title">건물 기본 설정</div>
+        <div class="form-row">
+          <label>건물명</label>
+          <input type="text" id="inp-building-name" placeholder="예: 청출어람관" style="max-width:240px"/>
+        </div>
+        <div class="form-row">
+          <label>층 수</label>
+          <input type="number" id="inp-floor-count" placeholder="예: 3" min="1" max="30" style="max-width:100px"/>
+          <button class="btn btn-gray btn-sm" onclick="applyFloorCount()">층 이름 입력란 생성</button>
+        </div>
+        <div class="floor-name-rows" id="floorNameRows"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveBuildingConfig()">저장</button>
+          <button class="btn btn-gray" onclick="resetBuildingConfig()">초기화</button>
+        </div>
+      </div>
+
+      <!-- 2. 도면 관리 -->
+      <div class="admin-card">
+        <div class="card-title">도면 관리</div>
+        <div class="form-row">
+          <label>층 선택</label>
+          <select id="floor-img-select" onchange="onFloorImgSelect()" style="max-width:120px"></select>
+        </div>
+        <div class="form-row">
+          <label>도면 경로</label>
+          <input type="text" id="inp-floor-img" placeholder="/image/1층도면.png" style="max-width:320px"/>
+        </div>
+        <div class="img-preview-wrap" id="imgPreviewWrap">
+          <span class="img-preview-empty">경로를 입력하면 미리보기가 표시됩니다</span>
+        </div>
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn btn-primary" onclick="saveFloorImage()">저장</button>
+          <button class="btn btn-gray" onclick="previewFloorImage()">미리보기</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteFloorImage()">삭제</button>
+        </div>
+      </div>
+
+      <!-- 3. 구역 설정 -->
+      <div class="admin-card">
+        <div class="card-title">구역 설정</div>
+        <div class="form-row">
+          <label>층 선택</label>
+          <select id="zone-floor-select" style="max-width:120px" onchange="renderZoneTable()"></select>
+          <label style="width:auto;margin-left:10px">구역 ID</label>
+          <input type="text" id="inp-zone-id" placeholder="1F-Z01" style="max-width:120px"/>
+          <label style="width:auto">구역명</label>
+          <input type="text" id="inp-zone-name" placeholder="대기공간" style="max-width:140px"/>
+        </div>
+        <div class="form-row">
+          <label>SVG 좌표</label>
+          <input type="number" id="inp-zone-cx" placeholder="cx" style="max-width:80px"/>
+          <input type="number" id="inp-zone-cy" placeholder="cy" style="max-width:80px"/>
+          <input type="number" id="inp-zone-w" placeholder="w" style="max-width:80px"/>
+          <input type="number" id="inp-zone-h" placeholder="h" style="max-width:80px"/>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary btn-sm" onclick="addOrUpdateZone()">추가 / 수정</button>
+          <button class="btn btn-gray btn-sm" onclick="clearZoneForm()">초기화</button>
+          <button class="btn btn-primary" onclick="saveZones()">저장</button>
+        </div>
+        <table class="admin-table" id="zoneTable">
+          <thead>
+            <tr><th>구역ID</th><th>층</th><th>구역명</th><th>cx</th><th>cy</th><th>w</th><th>h</th><th>작업</th></tr>
+          </thead>
+          <tbody id="zoneTbody"></tbody>
+        </table>
+      </div>
+
+      <!-- 4. 카메라 관리 -->
+      <div class="admin-card">
+        <div class="card-title">카메라 정보 관리</div>
+        <div class="two-col">
+          <div>
+            <div class="form-row"><label>카메라 ID</label><input type="text" id="inp-cam-id" placeholder="1F-05"/></div>
+            <div class="form-row"><label>설치 층</label><input type="number" id="inp-cam-floor" placeholder="1" min="1"/></div>
+            <div class="form-row"><label>연결 구역</label><input type="text" id="inp-cam-zone" placeholder="1F-Z01"/></div>
+            <div class="form-row"><label>위치명</label><input type="text" id="inp-cam-place" placeholder="대기공간"/></div>
+            <div class="form-row"><label>CCTV URL</label><input type="text" id="inp-cam-url" placeholder="/video/1f_05.mp4"/></div>
+          </div>
+          <div>
+            <div class="form-row"><label>SVG cx</label><input type="number" id="inp-cam-cx" placeholder="840"/></div>
+            <div class="form-row"><label>SVG cy</label><input type="number" id="inp-cam-cy" placeholder="460"/></div>
+            <div class="form-row"><label>SVG w</label><input type="number" id="inp-cam-w" placeholder="160"/></div>
+            <div class="form-row"><label>SVG h</label><input type="number" id="inp-cam-h" placeholder="100"/></div>
+            <div class="form-row">
+              <label>사용 여부</label>
+              <select id="inp-cam-enabled" style="max-width:100px">
+                <option value="true">사용</option>
+                <option value="false">미사용</option>
+              </select>
+            </div>
+            <div class="form-row"><label>감지 인원</label><input type="number" id="inp-cam-people" placeholder="0" min="0"/></div>
+            <div class="form-row"><label>신뢰도</label><input type="number" id="inp-cam-conf" placeholder="100" min="0" max="100"/></div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary btn-sm" onclick="addOrUpdateCamera()">추가 / 수정</button>
+          <button class="btn btn-gray btn-sm" onclick="clearCameraForm()">초기화</button>
+          <button class="btn btn-primary" onclick="saveCameras()">저장</button>
+          <button class="btn btn-gray btn-sm" onclick="restoreDefaultCameras()">기본값 복구</button>
+        </div>
+        <table class="admin-table" id="cameraTable">
+          <thead>
+            <tr><th>ID</th><th>층</th><th>구역</th><th>위치</th><th>인원</th><th>신뢰도</th><th>상태</th><th>사용</th><th>작업</th></tr>
+          </thead>
+          <tbody id="cameraTbody"></tbody>
+        </table>
+      </div>
+
+      <!-- 5. mmWave 센서 관리 -->
+      <div class="admin-card">
+        <div class="card-title">mmWave 센서 관리</div>
+        <div class="two-col">
+          <div>
+            <div class="form-row"><label>센서 ID</label><input type="text" id="inp-sensor-id" placeholder="MW-1F-05"/></div>
+            <div class="form-row"><label>설치 층</label><input type="number" id="inp-sensor-floor" placeholder="1" min="1"/></div>
+            <div class="form-row"><label>연결 구역</label><input type="text" id="inp-sensor-zone" placeholder="1F-Z01"/></div>
+            <div class="form-row"><label>위치명</label><input type="text" id="inp-sensor-place" placeholder="대기공간"/></div>
+          </div>
+          <div>
+            <div class="form-row"><label>좌표 x</label><input type="number" id="inp-sensor-x" placeholder="840"/></div>
+            <div class="form-row"><label>좌표 y</label><input type="number" id="inp-sensor-y" placeholder="460"/></div>
+            <div class="form-row">
+              <label>상태</label>
+              <select id="inp-sensor-status" style="max-width:160px">
+                <option value="normal">정상</option>
+                <option value="check">점검 필요</option>
+                <option value="disconnected">미연결</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>사용 여부</label>
+              <select id="inp-sensor-enabled" style="max-width:100px">
+                <option value="true">사용</option>
+                <option value="false">미사용</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary btn-sm" onclick="addOrUpdateSensor()">추가 / 수정</button>
+          <button class="btn btn-gray btn-sm" onclick="clearSensorForm()">초기화</button>
+          <button class="btn btn-primary" onclick="saveSensors()">저장</button>
+        </div>
+        <table class="admin-table">
+          <thead>
+            <tr><th>센서 ID</th><th>층</th><th>구역</th><th>위치</th><th>x</th><th>y</th><th>상태</th><th>사용</th><th>작업</th></tr>
+          </thead>
+          <tbody id="sensorTbody"></tbody>
+        </table>
+      </div>
+
+      <!-- 6. 알림 기준 설정 -->
+      <div class="admin-card">
+        <div class="card-title">알림 기준 설정</div>
+        <div class="threshold-row">
+          <span class="threshold-dot" style="background:var(--status-green)"></span>
+          <label>정상 기준 (이상)</label>
+          <input type="number" id="inp-green-min" value="80" min="1" max="100"/>
+          <span style="font-size:12px;color:var(--text-secondary)">% 이상</span>
+        </div>
+        <div class="threshold-row">
+          <span class="threshold-dot" style="background:var(--status-yellow)"></span>
+          <label>주의 기준 (이상)</label>
+          <input type="number" id="inp-yellow-min" value="50" min="1" max="100"/>
+          <span style="font-size:12px;color:var(--text-secondary)">% 이상 (정상 기준 미만)</span>
+        </div>
+        <div class="threshold-row">
+          <span class="threshold-dot" style="background:var(--status-red)"></span>
+          <label>위험 기준</label>
+          <span style="font-size:12px;color:var(--text-secondary)">주의 기준 미만 자동 설정</span>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveThresholds()">저장</button>
+          <button class="btn btn-gray" onclick="resetThresholds()">기본값 복원</button>
+        </div>
+      </div>
+
+      <!-- 7. 사용자 관리 -->
+      <div class="admin-card">
+        <div class="card-title">사용자 관리</div>
+        <div class="form-row">
+          <label>아이디</label>
+          <input type="text" id="inp-user-id" placeholder="admin" style="max-width:180px"/>
+          <label style="width:auto;margin-left:10px">권한</label>
+          <select id="inp-user-role" style="max-width:130px">
+            <option value="admin">admin</option>
+            <option value="operator">operator</option>
+          </select>
+          <label style="width:auto;margin-left:10px">메모</label>
+          <input type="text" id="inp-user-memo" placeholder="관리자" style="max-width:180px"/>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary btn-sm" onclick="addUser()">계정 추가</button>
+          <button class="btn btn-primary" onclick="saveUsers()">저장</button>
+        </div>
+        <table class="admin-table">
+          <thead>
+            <tr><th>아이디</th><th>권한</th><th>메모</th><th>작업</th></tr>
+          </thead>
+          <tbody id="userTbody"></tbody>
+        </table>
+      </div>
+
+      <!-- 8. 시연 데이터 설정 -->
+      <div class="admin-card">
+        <div class="card-title">시연 데이터 설정 <span style="font-size:11px;color:var(--text-secondary);font-weight:400">발표 시연용 — 저장 즉시 모든 화면에 반영</span></div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">카메라 칩을 선택하고 신뢰도/인원을 바꾸거나 상황 버튼을 눌러 저장하세요.</div>
+        <div class="demo-cam-grid" id="demoCamGrid"></div>
+        <div class="demo-inputs">
+          <label>신뢰도</label>
+          <input type="number" id="demo-conf" placeholder="90" min="0" max="100"/>
+          <label>감지 인원</label>
+          <input type="number" id="demo-people" placeholder="0" min="0"/>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-danger" onclick="setDemoStatus('danger')">🔴 위험 상황 (26%)</button>
+          <button class="btn btn-warning" onclick="setDemoStatus('warning')">🟡 주의 상황 (58%)</button>
+          <button class="btn btn-success" onclick="setDemoStatus('normal')">🟢 정상 상황 (90%)</button>
+          <button class="btn btn-primary" onclick="applyDemoChange()">적용 및 저장</button>
+          <button class="btn btn-gray" onclick="resetAllDemo()">전체 초기화</button>
+        </div>
+      </div>
+
+      <!-- 9. 저장 로그 -->
+      <div class="admin-card">
+        <div class="card-title" style="margin-bottom:10px">저장 로그</div>
+        <div class="log-list" id="logList">
+          <div class="log-item" style="color:var(--text-muted);font-size:11px">아직 로그가 없습니다.</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="../js/admin.js"></script>
+</body>
+</html>

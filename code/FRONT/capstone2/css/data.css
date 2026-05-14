@@ -752,40 +752,295 @@ body {
   background-color: #f3c316;
 }
 
-/* ===== DATA PAGE NOTIFICATION DOT FIX =====
-   알림 목록의 상태 점이 길게 늘어나는 문제 방지용입니다.
-   data.js에서 생성하는 .notif-status-dot을 8px 원형으로 강제 고정합니다.
-*/
-.topbar .notif-list .notif-item {
-  display: flex !important;
-  align-items: flex-start !important;
-  gap: 10px !important;
-}
-
-.topbar .notif-list .notif-item > .notif-status-dot,
-.topbar .notif-list .notif-item > .notif-dot {
-  display: block !important;
+/* ===== NOTIFICATION DOT SHAPE FIX ===== */
+.topbar .notif-item .notif-dot,
+.main-header .notif-item .notif-dot,
+.notif-list .notif-item .notif-dot {
   width: 8px !important;
   height: 8px !important;
   min-width: 8px !important;
   max-width: 8px !important;
-  min-height: 8px !important;
-  max-height: 8px !important;
   flex: 0 0 8px !important;
-  padding: 0 !important;
-  margin: 4px 0 0 0 !important;
   border-radius: 50% !important;
-  align-self: flex-start !important;
-  line-height: 0 !important;
-  overflow: hidden !important;
+  display: block !important;
+  margin-top: 4px !important;
 }
 
-.topbar .notif-list .notif-item > .notif-status-dot.red,
-.topbar .notif-list .notif-item > .notif-dot.red {
-  background: #ff4d4d !important;
+.topbar .notif-item .notif-item-text,
+.main-header .notif-item .notif-item-text,
+.notif-list .notif-item .notif-item-text {
+  flex: 1 1 auto !important;
+  min-width: 0;
 }
 
-.topbar .notif-list .notif-item > .notif-status-dot.yellow,
-.topbar .notif-list .notif-item > .notif-dot.yellow {
-  background: #f5c518 !important;
+.topbar .notif-item .notif-item-action,
+.main-header .notif-item .notif-item-action,
+.notif-list .notif-item .notif-item-action {
+  flex: 0 0 auto !important;
+  white-space: nowrap;
+}
+
+
+/* ===== DATA NOTIFICATION POPUP - SAME AS MAIN/FLOOR ===== */
+.notif-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+  animation: fadeBg 0.2s ease;
+}
+
+@keyframes fadeBg {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.notif-popup {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 14px;
+  width: 430px;
+  max-width: 95vw;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+  overflow: hidden;
+  animation: notifSlideUp 0.2s ease;
+}
+
+@keyframes notifSlideUp {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.notif-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.notif-popup-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #222222;
+}
+
+.notif-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: #5c6478;
+  font-size: 13px;
+  transition: background 0.12s, color 0.12s;
+}
+
+.notif-close:hover {
+  background: #f0f2f5;
+  color: #222222;
+}
+
+.notif-popup-body {
+  padding: 18px 20px;
+  font-size: 13px;
+  color: #666666;
+  line-height: 1.7;
+}
+
+.notif-popup-body strong {
+  color: #222222;
+  display: block;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.popup-camera-preview {
+  height: 190px;
+  background: #252934;
+  border-radius: 14px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #ff4d4d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 1px rgba(255,77,77,0.18);
+}
+
+.popup-camera-preview::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #303541 0%, #20232c 100%);
+}
+
+.popup-camera-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0,0,0,0.55);
+  color: rgba(255,255,255,0.82);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  z-index: 2;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.popup-camera-status-dot {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  z-index: 2;
+  background: #ff4d4d;
+  box-shadow: 0 0 8px #ff4d4d;
+}
+
+.popup-camera-icon {
+  position: relative;
+  z-index: 1;
+  color: rgba(255,255,255,0.22);
+}
+
+.popup-camera-confidence {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 2;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: #ff4d4d;
+  background: rgba(255,77,77,0.18);
+}
+
+.popup-live-badge {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 2;
+  background: #1a7a3a;
+  color: #4cff7e;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 9px;
+  border-radius: 999px;
+}
+
+.popup-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.popup-status.red {
+  background: rgba(255,77,77,0.18);
+  color: #ff4d4d;
+}
+
+.popup-status.yellow {
+  background: rgba(245,197,24,0.2);
+  color: #c28a00;
+}
+
+.notif-popup-footer {
+  padding: 12px 20px 18px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.btn-go {
+  background: #4a7cff;
+  color: #ffffff;
+  font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: opacity 0.15s, transform 0.1s;
+  display: inline-flex;
+}
+
+.btn-go:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+
+/* ===== DATA NOTIFICATION POPUP BUTTON FIX ===== */
+.notif-popup .btn-go,
+.notif-popup .btn-go:focus,
+.notif-popup .btn-go:active,
+.notif-popup .btn-cancel,
+.notif-popup .btn-cancel:focus,
+.notif-popup .btn-cancel:active,
+.notif-popup .notif-close,
+.notif-popup .notif-close:focus,
+.notif-popup .notif-close:active {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.notif-popup .btn-go,
+.notif-popup .btn-cancel,
+.notif-popup .notif-close {
+  cursor: pointer;
+  font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+}
+
+
+/* ===== X BUTTON TRANSPARENT FIX ===== */
+.notif-popup .notif-close,
+.notif-popup .notif-close:hover,
+.notif-popup .notif-close:focus,
+.notif-popup .notif-close:active {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ===== NOTIF DOT SHAPE FIX ===== */
+.notif-dot {
+  width: 8px !important;
+  height: 8px !important;
+  min-width: 8px !important;
+  max-width: 8px !important;
+  flex: 0 0 8px !important;
+  border-radius: 50% !important;
+  display: block !important;
+}
+
+/* ===== POPUP BUTTON RESET ===== */
+.notif-popup-footer .btn-go,
+.notif-popup-footer .btn-cancel,
+.modal-header .close-btn,
+.notif-close {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+.notif-close {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
 }

@@ -1167,3 +1167,60 @@ body { display: flex; height: 100vh; }
     min-height: 300px;
   }
 }
+
+
+/* ===== NOTIFICATION DOT SHAPE FIX ===== */
+.topbar .notif-item .notif-dot,
+.main-header .notif-item .notif-dot,
+.notif-list .notif-item .notif-dot {
+  width: 8px !important;
+  height: 8px !important;
+  min-width: 8px !important;
+  max-width: 8px !important;
+  flex: 0 0 8px !important;
+  border-radius: 50% !important;
+  display: block !important;
+  margin-top: 4px !important;
+}
+
+.topbar .notif-item .notif-item-text,
+.main-header .notif-item .notif-item-text,
+.notif-list .notif-item .notif-item-text {
+  flex: 1 1 auto !important;
+  min-width: 0;
+}
+
+.topbar .notif-item .notif-item-action,
+.main-header .notif-item .notif-item-action,
+.notif-list .notif-item .notif-item-action {
+  flex: 0 0 auto !important;
+  white-space: nowrap;
+}
+
+/* ===== NOTIF DOT SHAPE FIX ===== */
+.notif-dot {
+  width: 8px !important;
+  height: 8px !important;
+  min-width: 8px !important;
+  max-width: 8px !important;
+  flex: 0 0 8px !important;
+  border-radius: 50% !important;
+  display: block !important;
+}
+
+/* ===== POPUP BUTTON RESET ===== */
+.notif-popup-footer .btn-go,
+.notif-popup-footer .btn-cancel,
+.modal-header .close-btn,
+.notif-close {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+.notif-close {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+}

@@ -332,14 +332,20 @@ let FLOOR_DATA     = {};
 let currentFloor   = 1;
 let selectedCamera = null;
 let initialCameraId = null;
+let shouldOpenInitialCamera = false;
 
 /* ===== UTILS ===== */
 function safeJsonParse(v, fallback) {
   try { return v ? JSON.parse(v) : fallback; } catch { return fallback; }
 }
+function readThresholds() {
+  try { const t = localStorage.getItem("adminAlertThresholds"); if (t) return JSON.parse(t); } catch {}
+  return { greenMin: 80, yellowMin: 50 };
+}
 function getStatus(trust) {
-  if (trust >= 80) return "green";
-  if (trust >= 50) return "yellow";
+  const t = readThresholds();
+  if (trust >= t.greenMin) return "green";
+  if (trust >= t.yellowMin) return "yellow";
   return "red";
 }
 function statusText(s) {
@@ -351,6 +357,10 @@ function normalizeAI(r) {
   return { id:String(r.id), floor:Number(r.floor), people:Number(r.people??0), confidence:Number(r.confidence??r.trust??100) };
 }
 function readAIResults() {
+  const adminCams = safeJsonParse(localStorage.getItem("adminCameras"), null);
+  if (Array.isArray(adminCams) && adminCams.length > 0) {
+    return adminCams.map(c => normalizeAI({ id:c.id, floor:c.floor, people:c.people, confidence:c.confidence }));
+  }
   const saved = safeJsonParse(localStorage.getItem(AI_RESULTS_KEY), null);
   return Array.isArray(saved) ? saved.map(normalizeAI) : DEFAULT_AI_RESULTS.map(normalizeAI);
 }
@@ -762,12 +772,8 @@ function goToFloorCamera() {
   const camera = findCameraById(currentNotifCamId);
   if (!camera) return;
 
-  currentFloor = camera.floor;
-  initialCameraId = camera.id;
-  selectedCamera = null;
-
-  closeFloorNotifPopup();
-  renderAll();
+  const params = new URLSearchParams({ floor: String(camera.floor), cam: camera.id });
+  window.location.href = "floordashboard.html?" + params.toString();
 }
 
 document.addEventListener("click", event => {
@@ -793,11 +799,21 @@ function updateClock() {
 
 /* ===== URL PARAMS ===== */
 function applyUrlParams() {
-  const p  = new URLSearchParams(window.location.search);
+  const p = new URLSearchParams(window.location.search);
   const fl = Number(p.get("floor"));
   const cam = p.get("cam");
-  if (FLOOR_DATA[fl]) currentFloor = fl;
+  const openMode = p.get("open");
+
+  const floorFromCam = Number(String(cam || "").match(/^(\d+)F/)?.[1]);
+
+  if (FLOOR_DATA[fl]) {
+    currentFloor = fl;
+  } else if (FLOOR_DATA[floorFromCam]) {
+    currentFloor = floorFromCam;
+  }
+
   if (cam) initialCameraId = cam;
+  shouldOpenInitialCamera = openMode === "cctv" || openMode === "1" || openMode === "true";
 }
 
 /* ===== RENDER ALL ===== */
@@ -811,13 +827,19 @@ function renderAll() {
   renderFloorPlan();
   updatePanels();
   buildFloorNotifications();
+
+  if (shouldOpenInitialCamera && selectedCamera) {
+    const camIdToOpen = selectedCamera.id;
+    shouldOpenInitialCamera = false;
+    setTimeout(() => openCameraPreviewPopup(camIdToOpen), 0);
+  }
 }
 
 /* ===== REFRESH ===== */
 function refresh() { buildFloorData(); applyUrlParams(); renderAll(); }
 
 window.addEventListener("storage", e => {
-  if ([AI_RESULTS_KEY, BUILDING_CONFIG_KEY, CAMERA_LAYOUT_KEY].includes(e.key)) refresh();
+  if ([AI_RESULTS_KEY, BUILDING_CONFIG_KEY, CAMERA_LAYOUT_KEY, "adminCameras", "adminAlertThresholds"].includes(e.key)) refresh();
 });
 
 window.addEventListener("DOMContentLoaded", () => {

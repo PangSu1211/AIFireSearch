@@ -10,6 +10,8 @@
 const BUILDING_CONFIG_KEY = "buildingConfig";
 const CAMERA_LAYOUT_KEY = "cameraLayout";
 const AI_RESULTS_KEY = "aiCameraResults";
+const DASHBOARD_SCHEMA_VERSION_KEY = "dashboardSchemaVersion";
+const DASHBOARD_SCHEMA_VERSION = "floor-plan-v2";
 
 /*
   ===================== 테스트용 건물 구조 =====================
@@ -32,61 +34,62 @@ const AI_RESULTS_KEY = "aiCameraResults";
 const DEFAULT_BUILDING_CONFIG = {
   floorCount: 3,
   cameraCounts: {
-    1: 10, // 테스트값: 1층 카메라 10대
-    2: 5,  // 테스트값: 2층 카메라 5대
-    3: 3,  // 테스트값: 3층 카메라 3대
+    1: 6,
+    2: 6,
+    3: 7,
   },
 };
 
 /*
   ===================== 테스트용 AI 결과값 =====================
-  여기는 AI가 아직 연결되지 않았을 때 화면에 보여주기 위한 테스트 데이터입니다.
+  층별 현황 도면에 실제로 존재하는 카메라 ID와 맞춘 기본 데이터입니다.
 
-  실제 구현에서는 AI/서버가 아래 형태로 보내주면 됩니다.
-
-  {
-    id: "1F-01",       // 카메라 ID
-    floor: 1,          // 층
-    people: 12,        // AI가 판단한 인원 수
-    confidence: 38     // AI가 판단한 카메라 신뢰도
-  }
-
-  화면은 이 confidence 숫자를 보고 자동으로 색을 정합니다.
-  - 80 이상: 초록색
-  - 50 이상 80 미만: 노란색
-  - 50 미만: 빨간색
-
-  people 값도 자동으로 총원, 층별 인원, 주의 필요 인원에 반영됩니다.
+  중요:
+  maindashboard.js의 알림에서 이동하는 cam ID와
+  floordashboard.js의 FLOOR_PLANS.cameras ID가 같아야
+  층별 현황에서 해당 카메라가 자동 선택됩니다.
 */
 const DEFAULT_AI_RESULTS = [
-  // ===== 1층 테스트 카메라 10대  이런 느낌으로 ai가 값을 줄 수 있게 하면 될 듯 =====
-  { id: "1F-01", floor: 1, people: 1, confidence: 93 },  // 정상
-  { id: "1F-02", floor: 1, people: 2, confidence: 90 },  // 정상
-  { id: "1F-03", floor: 1, people: 3, confidence: 87 },  // 정상
-  { id: "1F-04", floor: 1, people: 2, confidence: 64 },  // 주의
-  { id: "1F-05", floor: 1, people: 3, confidence: 90 },  // 정상
-  { id: "1F-06", floor: 1, people: 0, confidence: 92 },  // 정상
-  { id: "1F-07", floor: 1, people: 4, confidence: 57 },  // 주의
-  { id: "1F-08", floor: 1, people: 2, confidence: 26 },  // 위험
-  { id: "1F-09", floor: 1, people: 3, confidence: 52 },  // 주의
-  { id: "1F-10", floor: 1, people: 0, confidence: 82 },  // 정상
+  { id: "1F-01", floor: 1, people: 1, confidence: 93 },
+  { id: "1F-02", floor: 1, people: 2, confidence: 90 },
+  { id: "1F-03", floor: 1, people: 3, confidence: 87 },
+  { id: "1F-04", floor: 1, people: 0, confidence: 64 },
+  { id: "1F-05", floor: 1, people: 3, confidence: 26 },
+  { id: "1F-06", floor: 1, people: 2, confidence: 92 },
 
-  // ===== 2층 테스트 카메라 5대 =====
-  { id: "2F-01", floor: 2, people: 0, confidence: 88 },  // 정상
-  { id: "2F-02", floor: 2, people: 1, confidence: 76 },  // 주의
-  { id: "2F-03", floor: 2, people: 3, confidence: 91 },  // 정상
-  { id: "2F-04", floor: 2, people: 2, confidence: 58 },  // 주의
-  { id: "2F-05", floor: 2, people: 1, confidence: 63 },  // 주의
+  { id: "2F-01", floor: 2, people: 8, confidence: 88 },
+  { id: "2F-02", floor: 2, people: 5, confidence: 57 },
+  { id: "2F-03", floor: 2, people: 3, confidence: 91 },
+  { id: "2F-04", floor: 2, people: 2, confidence: 58 },
+  { id: "2F-05", floor: 2, people: 4, confidence: 76 },
+  { id: "2F-06", floor: 2, people: 1, confidence: 63 },
 
-  // ===== 3층 테스트 카메라 3대 =====
-  { id: "3F-01", floor: 3, people: 1, confidence: 95 },  // 정상
-  { id: "3F-02", floor: 3, people: 2, confidence: 81 },  // 정상
-  { id: "3F-03", floor: 3, people: 0, confidence: 58 },  // 주의
+  { id: "3F-01", floor: 3, people: 6, confidence: 95 },
+  { id: "3F-02", floor: 3, people: 4, confidence: 81 },
+  { id: "3F-03", floor: 3, people: 2, confidence: 58 },
+  { id: "3F-04", floor: 3, people: 3, confidence: 42 },
+  { id: "3F-05", floor: 3, people: 1, confidence: 89 },
+  { id: "3F-06", floor: 3, people: 5, confidence: 72 },
+  { id: "3F-07", floor: 3, people: 0, confidence: 93 },
 ];
+
 
 let FLOORS_DATA = [];
 let allCameras = [];
 let currentPopupCamId = null;
+
+function ensureCompatibleLocalStorage() {
+  const savedVersion = localStorage.getItem(DASHBOARD_SCHEMA_VERSION_KEY);
+
+  if (savedVersion === DASHBOARD_SCHEMA_VERSION) {
+    return;
+  }
+
+  localStorage.removeItem(BUILDING_CONFIG_KEY);
+  localStorage.removeItem(CAMERA_LAYOUT_KEY);
+  localStorage.removeItem(AI_RESULTS_KEY);
+  localStorage.setItem(DASHBOARD_SCHEMA_VERSION_KEY, DASHBOARD_SCHEMA_VERSION);
+}
 
 /* ===================== COMMON DATA ===================== */
 function safeJsonParse(value, fallback) {
@@ -113,12 +116,15 @@ function normalizeAIResult(result) {
 
 /* 실제 API 연결 시에는 이 함수 안에서 fetch('/api/ai-results') 같은 방식으로 서버 값을 받아오면 됩니다. */
 function readAIResults() {
+  /* adminCameras 우선 사용 */
+  const adminCams = safeJsonParse(localStorage.getItem("adminCameras"), null);
+  if (Array.isArray(adminCams) && adminCams.length > 0) {
+    return adminCams.map(c => normalizeAIResult({ id:c.id, floor:c.floor, people:c.people, confidence:c.confidence }));
+  }
   const saved = safeJsonParse(localStorage.getItem(AI_RESULTS_KEY), null);
-
   if (!Array.isArray(saved)) {
     return DEFAULT_AI_RESULTS.map(normalizeAIResult);
   }
-
   return saved.map(normalizeAIResult);
 }
 
@@ -236,9 +242,15 @@ window.resetDashboardDefaults = resetDashboardDefaults;
 
 
 /* ===================== STATUS ===================== */
+function readThresholds() {
+  try { const t = localStorage.getItem("adminAlertThresholds"); if (t) return JSON.parse(t); } catch {}
+  return { greenMin: 80, yellowMin: 50 };
+}
+
 function getStatus(confidence) {
-  if (confidence >= 80) return "green";
-  if (confidence >= 50) return "yellow";
+  const t = readThresholds();
+  if (confidence >= t.greenMin) return "green";
+  if (confidence >= t.yellowMin) return "yellow";
   return "red";
 }
 
@@ -577,7 +589,12 @@ function goToCamera() {
   const camera = allCameras.find(item => item.id === currentPopupCamId);
   if (!camera) return;
 
-  window.location.href = `floordashboard.html?floor=${camera.floor}&cam=${camera.id}`;
+  const params = new URLSearchParams({
+    floor: String(camera.floor),
+    cam: camera.id,
+  });
+
+  window.location.href = `floordashboard.html?${params.toString()}`;
 }
 
 /* ===================== REFRESH ===================== */
@@ -594,6 +611,8 @@ function refreshDashboard() {
 
 /* ===================== INIT ===================== */
 function init() {
+  ensureCompatibleLocalStorage();
+
   updateClock();
   setInterval(updateClock, 1000);
 
@@ -604,7 +623,9 @@ window.addEventListener("storage", event => {
   if (
     event.key === AI_RESULTS_KEY ||
     event.key === BUILDING_CONFIG_KEY ||
-    event.key === CAMERA_LAYOUT_KEY
+    event.key === CAMERA_LAYOUT_KEY ||
+    event.key === "adminCameras" ||
+    event.key === "adminAlertThresholds"
   ) {
     refreshDashboard();
   }

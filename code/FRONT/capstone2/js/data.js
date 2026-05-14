@@ -289,74 +289,91 @@ document.querySelectorAll('.check-item').forEach(item => {
 });
 
 // ===== ⓒ BELL NOTIFICATION DROPDOWN =====
-const dataNotifications = [
-  {
-    title: '1F-01 · 1층',
-    sub: '신뢰도 38% · 인원 12명 · 위험',
-    status: 'red',
-    target: 'camera'
-  },
-  {
-    title: '2F-01 · 2층',
-    sub: '신뢰도 46% · 인원 5명 · 위험',
-    status: 'red',
-    target: 'camera'
-  },
-  {
-    title: '5F-01 · 5층',
-    sub: '신뢰도 44% · 인원 19명 · 위험',
-    status: 'red',
-    target: 'fire'
-  },
-  {
-    title: '7F-01 · 7층',
-    sub: '신뢰도 42% · 인원 3명 · 위험',
-    status: 'red',
-    target: 'camera'
-  },
-  {
-    title: '9F-01 · 9층',
-    sub: '신뢰도 33% · 인원 20명 · 위험',
-    status: 'red',
-    target: 'fire'
-  },
-  {
-    title: '1F-02 · 1층',
-    sub: '신뢰도 72% · 인원 24명 · 주의',
-    status: 'yellow',
-    target: 'camera'
-  },
-  {
-    title: '4F-01 · 4층',
-    sub: '신뢰도 61% · 인원 8명 · 주의',
-    status: 'yellow',
-    target: 'camera'
-  },
-  {
-    title: '4F-02 · 4층',
-    sub: '신뢰도 55% · 인원 31명 · 주의',
-    status: 'yellow',
-    target: 'camera'
-  },
-  {
-    title: '5F-02 · 5층',
-    sub: '신뢰도 78% · 인원 7명 · 주의',
-    status: 'yellow',
-    target: 'camera'
-  },
-  {
-    title: '7F-02 · 7층',
-    sub: '신뢰도 67% · 인원 11명 · 주의',
-    status: 'yellow',
-    target: 'camera'
-  },
-  {
-    title: '8F-01 · 8층',
-    sub: '신뢰도 73% · 인원 27명 · 주의',
-    status: 'yellow',
-    target: 'camera'
-  }
+
+function readDataThresholds() {
+  try { const t = localStorage.getItem("adminAlertThresholds"); if (t) return JSON.parse(t); } catch {}
+  return { greenMin: 80, yellowMin: 50 };
+}
+
+function getDataStatus(conf) {
+  const t = readDataThresholds();
+  if (conf >= t.greenMin) return 'green';
+  if (conf >= t.yellowMin) return 'yellow';
+  return 'red';
+}
+
+const DEFAULT_AI_DATA = [
+  { id:"1F-01", floor:1, place:"엘리베이터",  people:1,  confidence:93 },
+  { id:"1F-02", floor:1, place:"보안실",       people:2,  confidence:90 },
+  { id:"1F-03", floor:1, place:"안내데스크",   people:3,  confidence:87 },
+  { id:"1F-04", floor:1, place:"로비 중앙",    people:0,  confidence:64 },
+  { id:"1F-05", floor:1, place:"대기공간",     people:3,  confidence:26 },
+  { id:"1F-06", floor:1, place:"출입구",       people:2,  confidence:92 },
+  { id:"2F-01", floor:2, place:"구내식당 좌",  people:8,  confidence:88 },
+  { id:"2F-02", floor:2, place:"주방",         people:5,  confidence:57 },
+  { id:"2F-03", floor:2, place:"구내식당 우",  people:3,  confidence:91 },
+  { id:"2F-04", floor:2, place:"계단/엘리베이터", people:2, confidence:58 },
+  { id:"2F-05", floor:2, place:"구내카페 상",  people:4,  confidence:76 },
+  { id:"2F-06", floor:2, place:"구내카페 하",  people:1,  confidence:63 },
+  { id:"3F-01", floor:3, place:"사무실 A",     people:6,  confidence:95 },
+  { id:"3F-02", floor:3, place:"회의실",       people:4,  confidence:81 },
+  { id:"3F-03", floor:3, place:"탕비실",       people:2,  confidence:58 },
+  { id:"3F-04", floor:3, place:"임원실",       people:3,  confidence:42 },
+  { id:"3F-05", floor:3, place:"사무실 B",     people:1,  confidence:89 },
+  { id:"3F-06", floor:3, place:"서버실",       people:5,  confidence:72 },
+  { id:"3F-07", floor:3, place:"복도",         people:0,  confidence:93 },
 ];
+
+function getDataNotifications() {
+  let cams = null;
+  try {
+    const ac = localStorage.getItem("adminCameras");
+    if (ac) cams = JSON.parse(ac);
+  } catch {}
+  if (!Array.isArray(cams) || cams.length === 0) {
+    try {
+      const ai = localStorage.getItem("aiCameraResults");
+      if (ai) cams = JSON.parse(ai);
+    } catch {}
+  }
+  const source = (Array.isArray(cams) && cams.length > 0) ? cams : DEFAULT_AI_DATA;
+
+  return source
+    .map(c => {
+      const conf = Number(c.confidence ?? c.trust ?? 100);
+      const st   = getDataStatus(conf);
+      const place = c.place || String(c.floor||"")+"층";
+      return {
+        camId: String(c.id),
+        floor: Number(c.floor || String(c.id).match(/^(\d+)F/)?.[1] || 1),
+        place,
+        trust: conf,
+        people: Number(c.people ?? 0),
+        status: st,
+        title: `${c.id} · ${c.floor}층`,
+        sub: `${place} · 신뢰도 ${conf}% · 인원 ${c.people||0}명 · ${st==='red'?'위험':st==='yellow'?'주의':'정상'}`,
+      };
+    })
+    .filter(c => c.status !== 'green')
+    .sort((a,b) => { const o={red:0,yellow:1}; return (o[a.status]??2)-(o[b.status]??2)||a.trust-b.trust; });
+}
+
+let currentDataNotifItem = null;
+
+function getDataNotificationDetail(item) {
+  const camId = item.camId || item.id || String(item.title || '').split('·')[0].trim();
+  const floorFromId = Number(String(camId).match(/^(\d+)F/)?.[1]);
+  const floorFromTitle = Number(String(item.title || '').match(/(\d+)층/)?.[1]);
+  const floor = Number(item.floor || floorFromId || floorFromTitle || 1);
+  const sub = String(item.sub || '');
+  const place = item.place || sub.split('·')[0].trim() || `${floor}층 카메라`;
+  const trust = Number(item.trust ?? item.confidence ?? sub.match(/신뢰도\s*(\d+)%/)?.[1] ?? 0);
+  const people = Number(item.people ?? sub.match(/인원\s*(\d+)명/)?.[1] ?? 0);
+  const status = item.status === 'danger' ? 'red' : item.status;
+  const label = status === 'red' ? '위험' : status === 'yellow' ? '주의' : '정상';
+
+  return { ...item, camId, floor, place, trust, people, status, label };
+}
 
 function buildDataNotifications() {
   const listItems = document.getElementById('notif-list-items');
@@ -365,7 +382,9 @@ function buildDataNotifications() {
 
   listItems.innerHTML = '';
 
-  if (dataNotifications.length === 0) {
+  const notifications = getDataNotifications();
+
+  if (notifications.length === 0) {
     empty.classList.remove('hidden');
     bellDot.classList.remove('active');
     return;
@@ -374,16 +393,16 @@ function buildDataNotifications() {
   empty.classList.add('hidden');
   bellDot.classList.add('active');
 
-  dataNotifications.forEach(item => {
+  notifications.forEach(alert => {
     const row = document.createElement('div');
     row.className = 'notif-item';
 
     row.innerHTML = `
-      <span class="notif-status-dot ${item.status}" aria-hidden="true"></span>
+      <span class="notif-dot ${alert.status}"></span>
 
       <div class="notif-item-text">
-        <div class="notif-item-title">${item.title}</div>
-        <div class="notif-item-sub">${item.sub}</div>
+        <div class="notif-item-title">${alert.title}</div>
+        <div class="notif-item-sub">${alert.sub}</div>
       </div>
 
       <span class="notif-item-action">확인 →</span>
@@ -391,7 +410,7 @@ function buildDataNotifications() {
 
     row.addEventListener('click', () => {
       closeDataNotifList();
-      moveToDataTarget(item.target);
+      openDataNotifPopup(alert);
     });
 
     listItems.appendChild(row);
@@ -410,26 +429,67 @@ function closeDataNotifList() {
   list.classList.add('hidden');
 }
 
-function moveToDataTarget(target) {
-  const targetEl =
-    target === 'fire'
-      ? document.querySelector('.fire-card')
-      : document.querySelector('.camera-card');
+function openDataNotifPopup(item) {
+  const alert = getDataNotificationDetail(item);
+  currentDataNotifItem = alert;
 
-  if (!targetEl) return;
+  const overlay = document.getElementById('notif-overlay');
+  const body = document.getElementById('notif-popup-body');
+  if (!overlay || !body) return;
 
-  targetEl.scrollIntoView({
-    behavior: 'smooth',
-    block: 'center'
-  });
+  const previewHtml =
+    alert.status === 'red'
+      ? `
+        <div class="popup-camera-preview">
+          <div class="popup-camera-tag">${alert.camId} · ${alert.floor}층 CCTV</div>
+          <div class="popup-camera-status-dot"></div>
 
-  targetEl.style.outline = target === 'fire'
-    ? '2px solid var(--red)'
-    : '2px solid var(--accent)';
+          <span class="popup-camera-icon">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M23 7l-7 5 7 5V7z"></path>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+            </svg>
+          </span>
 
-  setTimeout(() => {
-    targetEl.style.outline = '';
-  }, 2000);
+          <div class="popup-camera-confidence">${alert.trust}%</div>
+          <span class="popup-live-badge">● LIVE</span>
+        </div>
+      `
+      : '';
+
+  const message =
+    alert.status === 'red'
+      ? `카메라 신뢰도가 <b style="color:#ff4d4d">${alert.trust}%</b>로 매우 낮습니다. 즉시 점검이 필요합니다.`
+      : `카메라 신뢰도가 <b style="color:#f5c518">${alert.trust}%</b>로 주의 수준입니다. 확인이 필요합니다.`;
+
+  body.innerHTML = `
+    ${previewHtml}
+
+    <div class="popup-detail">
+      <strong>${alert.camId} — ${alert.floor}층 ${alert.place}</strong>
+      ${message}
+
+      <div class="popup-status ${alert.status}">
+        ${alert.label} · 인원 ${alert.people}명
+      </div>
+    </div>
+  `;
+
+  overlay.classList.remove('hidden');
+}
+
+function closeDataNotifPopup() {
+  const overlay = document.getElementById('notif-overlay');
+  if (!overlay) return;
+
+  overlay.classList.add('hidden');
+  currentDataNotifItem = null;
+}
+
+function goToDataCamera() {
+  if (!currentDataNotifItem) return;
+  const a = currentDataNotifItem;
+  window.location.href = `floordashboard.html?floor=${a.floor}&cam=${encodeURIComponent(a.camId)}`;
 }
 
 document.getElementById('bellBtn').addEventListener('click', toggleDataNotifList);
@@ -441,6 +501,18 @@ document.addEventListener('click', e => {
   if (!bell.contains(e.target) && !list.contains(e.target)) {
     closeDataNotifList();
   }
+});
+
+
+const dataNotifOverlay = document.getElementById('notif-overlay');
+if (dataNotifOverlay) {
+  dataNotifOverlay.addEventListener('click', event => {
+    if (event.target === dataNotifOverlay) closeDataNotifPopup();
+  });
+}
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') closeDataNotifPopup();
 });
 
 // ===== ⓓ VIDEO POPUP =====
@@ -654,3 +726,9 @@ updateDateTime();
 
 /* 1초마다 갱신 */
 setInterval(updateDateTime, 1000);
+
+window.addEventListener('storage', function(e) {
+  if (e.key === 'adminCameras' || e.key === 'aiCameraResults' || e.key === 'adminAlertThresholds') {
+    buildDataNotifications();
+  }
+});

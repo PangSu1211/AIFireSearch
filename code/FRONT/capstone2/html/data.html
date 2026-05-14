@@ -15,6 +15,25 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
+
+    <div id="notif-overlay" class="notif-overlay hidden">
+      <div class="notif-popup">
+        <div class="notif-popup-header">
+          <span class="notif-popup-title">⚠ 알림</span>
+          <button class="notif-close" type="button" onclick="closeDataNotifPopup()">✕</button>
+        </div>
+
+        <div class="notif-popup-body" id="notif-popup-body"></div>
+
+        <div class="notif-popup-footer">
+          <button class="btn-go" id="notif-go-btn" type="button" onclick="goToDataCamera()">
+            해당 카메라로 이동
+          </button>
+          <button class="btn-cancel" type="button" onclick="closeDataNotifPopup()">닫기</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 사이드바 -->
     <aside class="sidebar">
       <div class="sidebar-date">
@@ -77,6 +96,17 @@
           </span>
 
           데이터
+        </a>
+
+        <div class="nav-divider"></div>
+
+        <a href="admin.html" class="nav-item">
+          <span class="nav-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+          </span>
+          관리자 설정
         </a>
 
         <div class="nav-divider"></div>
