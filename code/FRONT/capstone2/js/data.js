@@ -379,7 +379,7 @@ function buildDataNotifications() {
     row.className = 'notif-item';
 
     row.innerHTML = `
-      <span class="notif-dot ${item.status}"></span>
+      <span class="notif-status-dot ${item.status}" aria-hidden="true"></span>
 
       <div class="notif-item-text">
         <div class="notif-item-title">${item.title}</div>

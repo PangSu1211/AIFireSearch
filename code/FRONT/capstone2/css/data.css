@@ -726,3 +726,66 @@ body {
   justify-content: flex-end;
   gap: 8px;
 }
+
+.alert-list .alert-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.alert-list .alert-dot {
+  width: 8px !important;
+  height: 8px !important;
+  min-width: 8px !important;
+  max-width: 8px !important;
+  flex: 0 0 8px !important;
+  border-radius: 50% !important;
+  display: inline-block !important;
+  margin-top: 8px;
+}
+
+.alert-list .alert-dot.danger {
+  background-color: #ff4d4f;
+}
+
+.alert-list .alert-dot.warning {
+  background-color: #f3c316;
+}
+
+/* ===== DATA PAGE NOTIFICATION DOT FIX =====
+   알림 목록의 상태 점이 길게 늘어나는 문제 방지용입니다.
+   data.js에서 생성하는 .notif-status-dot을 8px 원형으로 강제 고정합니다.
+*/
+.topbar .notif-list .notif-item {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 10px !important;
+}
+
+.topbar .notif-list .notif-item > .notif-status-dot,
+.topbar .notif-list .notif-item > .notif-dot {
+  display: block !important;
+  width: 8px !important;
+  height: 8px !important;
+  min-width: 8px !important;
+  max-width: 8px !important;
+  min-height: 8px !important;
+  max-height: 8px !important;
+  flex: 0 0 8px !important;
+  padding: 0 !important;
+  margin: 4px 0 0 0 !important;
+  border-radius: 50% !important;
+  align-self: flex-start !important;
+  line-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.topbar .notif-list .notif-item > .notif-status-dot.red,
+.topbar .notif-list .notif-item > .notif-dot.red {
+  background: #ff4d4d !important;
+}
+
+.topbar .notif-list .notif-item > .notif-status-dot.yellow,
+.topbar .notif-list .notif-item > .notif-dot.yellow {
+  background: #f5c518 !important;
+}
