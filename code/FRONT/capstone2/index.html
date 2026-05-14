@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Fire Guard</title>
+
+    <meta http-equiv="refresh" content="0; url=html/login.html" />
+
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f0f2f5;
+        font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+        color: #222222;
+      }
+
+      .loading-box {
+        text-align: center;
+      }
+
+      .loading-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      .loading-text {
+        font-size: 13px;
+        color: #666666;
+        margin-bottom: 16px;
+      }
+
+      .login-link {
+        display: inline-block;
+        padding: 8px 14px;
+        border-radius: 8px;
+        background: #4a7cff;
+        color: #ffffff;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="loading-box">
+      <div class="loading-title">Smart Fire Guard</div>
+      <div class="loading-text">로그인 화면으로 이동 중입니다.</div>
+      <a class="login-link" href="html/login.html">로그인 화면으로 이동</a>
+    </div>
+
+    <script>
+      window.location.replace("html/login.html");
+    </script>
+  </body>
+</html>
